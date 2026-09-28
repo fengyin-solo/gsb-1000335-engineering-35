@@ -6,7 +6,10 @@ from typing import Any
 from app.store import store
 
 MODULE = "backfill"
-REQUIRED_FIELDS = ["回填编号", "修复路段", "管沟深度"]
+# 回填编号、修复路段、管沟深度、回填材料缺一不可，避免登记出半成品记录。
+REQUIRED_FIELDS = ["回填编号", "修复路段", "管沟深度", "回填材料"]
+# 列表/明细展示的其余列；登记时缺省补空串，保证每条记录字段齐全。
+OPTIONAL_FIELDS = ["压实度", "路面恢复", "验收日期", "回填状态"]
 STATUS_ORDER = ["待回填", "回填中", "待检测", "已验收"]
 ACTION_RULES = {"开始回填": "回填中", "提交检测": "待检测", "组织验收": "已验收"}
 NEGATIVE_ACTIONS = []
@@ -37,9 +40,18 @@ class BackfillService:
         missing = [field for field in REQUIRED_FIELDS if not str(values.get(field) or "").strip()]
         if missing:
             return None, missing
+        code = str(values.get("回填编号") or "").strip()
         rows = store.rows(MODULE)
-        entry = {"id": max((int(row.get("id", 0)) for row in rows), default=0) + 1}
-        entry.update({field: values.get(field) for field in REQUIRED_FIELDS})
+        if any(str(row.get("回填编号") or "").strip() == code for row in rows):
+            return None, [f"回填编号「{code}」已存在"]
+        # 先在本地把整条记录拼完整，校验通过后再入库，避免半成品落表。
+        entry: dict[str, Any] = {
+            "id": max((int(row.get("id", 0)) for row in rows), default=0) + 1,
+        }
+        for field in REQUIRED_FIELDS:
+            entry[field] = str(values.get(field) or "").strip()
+        for field in OPTIONAL_FIELDS:
+            entry[field] = str(values.get(field) or "").strip()
         entry["status"] = STATUS_ORDER[0]
         entry["pending"] = True
         entry["abnormal"] = False

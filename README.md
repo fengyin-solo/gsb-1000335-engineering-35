@@ -34,6 +34,22 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 健康检查：`curl http://127.0.0.1:8000/api/health`
 
+#### 回填修复样例引导（本地）
+
+回填修复模块不再使用写死的占位样例，改由 `backend/app/backfill_bootstrap.py` 在
+服务启动（lifespan）时引导：
+
+- **环境检查**：启动前校验 Python 版本、样例目录可写、样例模板字段完整
+  （回填编号、修复路段、管沟深度、回填材料等缺一不可）；`run.sh` 不通过不启动，
+  也可手工跑 `.venv/bin/python -m app.backfill_bootstrap --check`。
+- **首次运行**：生成 3 条真实样例，验收日期相对当天计算（不会过期），
+  先写临时文件再原子改名落盘到 `backend/data/backfill_samples.json`。
+- **中断恢复**：上次写入中断留下临时文件时，先清理半成品再重建，内存整体替换。
+- **再次运行**：快照完整且校验和一致则原样加载，因此启动、查询、再次运行
+  看到的记录完全一致；快照损坏会备份为 `.corrupt` 后重建。
+- 仅在 `APP_ENV` 为 `local`/`dev` 时引导，生产等环境自动跳过；样例目录可用
+  环境变量 `BACKFILL_DATA_DIR` 覆盖，默认 `backend/data/`（已加入 `.gitignore`）。
+
 ### 前端
 
 ```bash

@@ -85,3 +85,6 @@ desktop.ini
 *.db
 *.pid
 *.seed
+
+# 回填修复样例快照（本地启动自动生成，含相对当天的日期）
+backend/data/
