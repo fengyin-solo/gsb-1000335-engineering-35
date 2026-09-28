@@ -6,7 +6,7 @@ from typing import Any
 from app.store import store
 
 MODULE = "backfill"
-REQUIRED_FIELDS = ["回填编号", "修复路段", "管沟深度"]
+REQUIRED_FIELDS = ["回填编号", "修复路段", "管沟深度", "回填材料"]
 STATUS_ORDER = ["待回填", "回填中", "待检测", "已验收"]
 ACTION_RULES = {"开始回填": "回填中", "提交检测": "待检测", "组织验收": "已验收"}
 NEGATIVE_ACTIONS = []

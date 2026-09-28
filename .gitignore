@@ -85,3 +85,5 @@ desktop.ini
 *.db
 *.pid
 *.seed
+*.seed.tmp
+backend/data/

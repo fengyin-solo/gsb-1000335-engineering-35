@@ -34,6 +34,20 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 健康检查：`curl http://127.0.0.1:8000/api/health`
 
+#### 回填修复本地样例
+
+启动脚本会先执行 `python -m app.backfill_seed`，为回填修复模块准备本地样例
+（状态文件 `backend/data/backfill.seed`，仅本机使用，已在 `.gitignore` 忽略）：
+
+- **首次运行**：环境检查（目录可建、可写、路径不冲突）通过后，生成 3 条字段
+  完整的确定性样例——回填编号、修复路段、管沟深度、回填材料逐条校验，缺任一项
+  直接中止，不会落半成品；
+- **写入原子化**：先写 `backfill.seed.tmp`、刷盘后再原子替换为正式文件。
+  启动时发现遗留 tmp：内容完整则补提交（中断恢复），缺字段则清理后重建；
+- **再次运行**：正式文件结构与校验和一致就原样沿用，因此启动、查询、再次运行
+  看到的记录完全一致。手工也可执行 `cd backend && python -m app.backfill_seed`
+  查看当前属于哪种模式。
+
 ### 前端
 
 ```bash
